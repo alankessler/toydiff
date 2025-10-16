@@ -90,6 +90,153 @@ class FuzzyMatcher {
     }
 
     /**
+     * Damerau-Levenshtein distance - Edit distance with transpositions
+     * Includes swapping adjacent characters as a single operation
+     */
+    static damerauLevenshteinDistance(str1, str2) {
+        const len1 = str1.length;
+        const len2 = str2.length;
+
+        const H = {};
+        const maxdist = len1 + len2;
+        H[-1] = maxdist;
+
+        const da = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+
+        for (let i = 0; i <= len1; i++) {
+            H[str1[i - 1]] = 0;
+            da[i][-1] = maxdist;
+            da[i][0] = i;
+        }
+        for (let j = 0; j <= len2; j++) {
+            H[str2[j - 1]] = 0;
+            da[0][j] = j;
+        }
+
+        for (let i = 1; i <= len1; i++) {
+            let DB = 0;
+            for (let j = 1; j <= len2; j++) {
+                const k = H[str2[j - 1]];
+                const l = DB;
+                let cost = 1;
+                if (str1[i - 1] === str2[j - 1]) {
+                    cost = 0;
+                    DB = j;
+                }
+
+                da[i][j] = Math.min(
+                    da[i - 1][j] + 1,           // deletion
+                    da[i][j - 1] + 1,           // insertion
+                    da[i - 1][j - 1] + cost,    // substitution
+                    da[k - 1][l - 1] + (i - k - 1) + 1 + (j - l - 1)  // transposition
+                );
+            }
+            H[str1[i - 1]] = i;
+        }
+
+        return da[len1][len2];
+    }
+
+    /**
+     * Calculate similarity percentage based on Damerau-Levenshtein distance
+     */
+    static damerauLevenshteinSimilarity(str1, str2) {
+        const maxLen = Math.max(str1.length, str2.length);
+        if (maxLen === 0) return 100;
+
+        const distance = this.damerauLevenshteinDistance(str1, str2);
+        return ((maxLen - distance) / maxLen) * 100;
+    }
+
+    /**
+     * Jaro similarity - String similarity based on matching characters
+     */
+    static jaroSimilarity(str1, str2) {
+        if (str1 === str2) return 100;
+        if (str1.length === 0 || str2.length === 0) return 0;
+
+        const matchWindow = Math.floor(Math.max(str1.length, str2.length) / 2) - 1;
+        const str1Matches = new Array(str1.length).fill(false);
+        const str2Matches = new Array(str2.length).fill(false);
+
+        let matches = 0;
+        let transpositions = 0;
+
+        // Find matches
+        for (let i = 0; i < str1.length; i++) {
+            const start = Math.max(0, i - matchWindow);
+            const end = Math.min(i + matchWindow + 1, str2.length);
+
+            for (let j = start; j < end; j++) {
+                if (str2Matches[j] || str1[i] !== str2[j]) continue;
+                str1Matches[i] = true;
+                str2Matches[j] = true;
+                matches++;
+                break;
+            }
+        }
+
+        if (matches === 0) return 0;
+
+        // Find transpositions
+        let k = 0;
+        for (let i = 0; i < str1.length; i++) {
+            if (!str1Matches[i]) continue;
+            while (!str2Matches[k]) k++;
+            if (str1[i] !== str2[k]) transpositions++;
+            k++;
+        }
+
+        const jaro = (
+            matches / str1.length +
+            matches / str2.length +
+            (matches - transpositions / 2) / matches
+        ) / 3;
+
+        return jaro * 100;
+    }
+
+    /**
+     * Jaro-Winkler similarity - Enhanced Jaro with prefix bonus
+     * Gives higher scores to strings with common prefixes
+     */
+    static jaroWinklerSimilarity(str1, str2) {
+        const jaroSim = this.jaroSimilarity(str1, str2);
+
+        // Find common prefix (up to 4 characters)
+        let prefixLen = 0;
+        const maxPrefix = Math.min(4, Math.min(str1.length, str2.length));
+
+        for (let i = 0; i < maxPrefix; i++) {
+            if (str1[i] === str2[i]) {
+                prefixLen++;
+            } else {
+                break;
+            }
+        }
+
+        // Jaro-Winkler formula: jaro + (prefixLen * p * (1 - jaro))
+        // where p = 0.1 (scaling factor)
+        const p = 0.1;
+        const jaroWinkler = jaroSim + (prefixLen * p * (1 - jaroSim / 100));
+
+        return Math.min(jaroWinkler * 100, 100);
+    }
+
+    /**
+     * Token Sort Ratio - Handles different word orders
+     * Sorts words alphabetically before comparing
+     */
+    static tokenSortRatio(str1, str2) {
+        // Tokenize and sort
+        const tokens1 = str1.toLowerCase().trim().split(/\s+/).sort().join(' ');
+        const tokens2 = str2.toLowerCase().trim().split(/\s+/).sort().join(' ');
+
+        // Use Levenshtein similarity on sorted tokens
+        return this.levenshteinSimilarity(tokens1, tokens2);
+    }
+
+    /**
      * Character-by-character diff highlighting
      * Returns HTML with differences highlighted
      */
@@ -305,6 +452,130 @@ class FuzzyMatcher {
                             index1: i,
                             index2: bestMatch,
                             matchType: 'levenshtein',
+                            similarity: bestSimilarity,
+                            diff: diff
+                        });
+                        unmatched1.delete(i);
+                        unmatched2.delete(bestMatch);
+                        matched.add(bestMatch);
+                    }
+                }
+            }
+        }
+        // Damerau-Levenshtein matching
+        else if (matchType === 'damerau-levenshtein') {
+            const matched = new Set();
+
+            for (let i = 0; i < list1.length; i++) {
+                if (unmatched1.has(i)) {
+                    let bestMatch = -1;
+                    let bestSimilarity = 0;
+
+                    const item1 = normalize(list1[i]);
+
+                    for (let j = 0; j < list2.length; j++) {
+                        if (unmatched2.has(j) && !matched.has(j)) {
+                            const item2 = normalize(list2[j]);
+                            const similarity = this.damerauLevenshteinSimilarity(item1, item2);
+
+                            if (similarity >= threshold && similarity > bestSimilarity) {
+                                bestSimilarity = similarity;
+                                bestMatch = j;
+                            }
+                        }
+                    }
+
+                    if (bestMatch !== -1) {
+                        const diff = this.highlightDiff(list1[i], list2[bestMatch]);
+                        matches.push({
+                            item1: list1[i],
+                            item2: list2[bestMatch],
+                            index1: i,
+                            index2: bestMatch,
+                            matchType: 'damerau-levenshtein',
+                            similarity: bestSimilarity,
+                            diff: diff
+                        });
+                        unmatched1.delete(i);
+                        unmatched2.delete(bestMatch);
+                        matched.add(bestMatch);
+                    }
+                }
+            }
+        }
+        // Jaro-Winkler matching
+        else if (matchType === 'jaro-winkler') {
+            const matched = new Set();
+
+            for (let i = 0; i < list1.length; i++) {
+                if (unmatched1.has(i)) {
+                    let bestMatch = -1;
+                    let bestSimilarity = 0;
+
+                    const item1 = normalize(list1[i]);
+
+                    for (let j = 0; j < list2.length; j++) {
+                        if (unmatched2.has(j) && !matched.has(j)) {
+                            const item2 = normalize(list2[j]);
+                            const similarity = this.jaroWinklerSimilarity(item1, item2);
+
+                            if (similarity >= threshold && similarity > bestSimilarity) {
+                                bestSimilarity = similarity;
+                                bestMatch = j;
+                            }
+                        }
+                    }
+
+                    if (bestMatch !== -1) {
+                        const diff = this.highlightDiff(list1[i], list2[bestMatch]);
+                        matches.push({
+                            item1: list1[i],
+                            item2: list2[bestMatch],
+                            index1: i,
+                            index2: bestMatch,
+                            matchType: 'jaro-winkler',
+                            similarity: bestSimilarity,
+                            diff: diff
+                        });
+                        unmatched1.delete(i);
+                        unmatched2.delete(bestMatch);
+                        matched.add(bestMatch);
+                    }
+                }
+            }
+        }
+        // Token Sort Ratio matching
+        else if (matchType === 'token-sort') {
+            const matched = new Set();
+
+            for (let i = 0; i < list1.length; i++) {
+                if (unmatched1.has(i)) {
+                    let bestMatch = -1;
+                    let bestSimilarity = 0;
+
+                    // Don't normalize for token-sort, it handles its own tokenization
+                    const item1 = list1[i].trim();
+
+                    for (let j = 0; j < list2.length; j++) {
+                        if (unmatched2.has(j) && !matched.has(j)) {
+                            const item2 = list2[j].trim();
+                            const similarity = this.tokenSortRatio(item1, item2);
+
+                            if (similarity >= threshold && similarity > bestSimilarity) {
+                                bestSimilarity = similarity;
+                                bestMatch = j;
+                            }
+                        }
+                    }
+
+                    if (bestMatch !== -1) {
+                        const diff = this.highlightDiff(list1[i], list2[bestMatch]);
+                        matches.push({
+                            item1: list1[i],
+                            item2: list2[bestMatch],
+                            index1: i,
+                            index2: bestMatch,
+                            matchType: 'token-sort',
                             similarity: bestSimilarity,
                             diff: diff
                         });

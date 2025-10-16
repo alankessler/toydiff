@@ -133,7 +133,10 @@ function updateStats(listNum) {
 function onMatchTypeChange(e) {
     const thresholdControl = document.getElementById('thresholdControl');
 
-    if (e.target.value === 'levenshtein') {
+    // Show threshold control for fuzzy matching algorithms
+    const fuzzyAlgorithms = ['levenshtein', 'damerau-levenshtein', 'jaro-winkler', 'token-sort'];
+
+    if (fuzzyAlgorithms.includes(e.target.value)) {
         thresholdControl.style.display = 'flex';
     } else {
         thresholdControl.style.display = 'none';

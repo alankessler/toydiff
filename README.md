@@ -1,197 +1,234 @@
 # List Comparer
 
-A macOS application for comparing two lists with support for multiple file formats and fuzzy matching.
+A web-based tool for comparing two lists with intelligent matching algorithms. Runs entirely in your browser - no installation required!
+
+🔗 **[Try it live](https://alankessler.github.io/toydiff/)**
 
 ## Features
 
 - **Multiple Input Methods:**
-  - Paste text directly into frames
-  - Load files via file dialog
-  - Supports: .txt, .xlsx, .docx, .jpg, .png
+  - Paste text directly into text areas
+  - Drag and drop files
+  - Click to browse and select files
+  - Supports: .txt, .xlsx, .docx
 
 - **Intelligent File Parsing:**
-  - Automatically extracts lists from various file formats
-  - Handles Excel sheets and columns
-  - Extracts text from Word documents (paragraphs and tables)
-  - OCR support for images (requires Tesseract)
-  - Prompts user when ambiguity is detected
+  - Automatically extracts text from various file formats
+  - Excel: Processes all sheets and cells
+  - Word: Extracts all text content
+  - Text: One item per line
 
-- **Comparison Options:**
-  - Exact matching
-  - Fuzzy matching with Soundex algorithm
-  - Fuzzy matching with Levenshtein distance
+- **Powerful Matching Algorithms:**
+  - **Exact Match:** Find perfect matches between lists
+  - **Soundex:** Phonetic matching for similar-sounding items (e.g., "Smith" matches "Smyth")
+  - **Levenshtein:** Fuzzy matching based on edit distance with adjustable threshold (50-100%)
 
-- **Clear Visual Results:**
-  - Color-coded differences (red/blue/green)
-  - Shows items unique to each list
-  - Shows items common to both lists
-  - **NEW:** Fuzzy matches display with character differences highlighted in yellow
-  - Shows exact pairs of matched items with visual diff highlighting
+- **Visual Diff Highlighting:**
+  - Character-by-character differences highlighted in yellow
+  - Shows exact pairs of matched items with visual arrows (⟷)
+  - Color-coded results for easy scanning
+  - Similarity percentage for fuzzy matches
 
-## Installation
+- **Privacy-Focused:**
+  - 100% client-side processing
+  - Files never leave your computer
+  - No server uploads or data collection
+  - Works offline after first load
 
-### Prerequisites
+## Quick Start
 
-1. Python 3.8 or higher
-2. Tesseract OCR (for image support)
+### Option 1: Use Online (Recommended)
 
-```bash
-# Install Tesseract on macOS
-brew install tesseract
-```
+Simply visit: **https://alankessler.github.io/toydiff/**
 
-### Setup
+No installation, no setup, just open and use!
 
-1. Install dependencies:
+### Option 2: Run Locally
 
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the application directly:
-
-```bash
-python list_comparer.py
-```
-
-### Building a Portable .app
-
-To create a **portable** standalone macOS application:
-
-```bash
-# Build the portable .app (includes all dependencies)
-./build_app.sh
-
-# The app will be created in: dist/List Comparer.app
-# This app is fully portable and can run on any Mac!
-```
-
-**Features of the portable build:**
-- ✅ Bundles Python runtime and all dependencies
-- ✅ No Python installation required on target Mac
-- ✅ No pip packages required
-- ✅ Works on macOS 10.13+ (High Sierra and newer)
-- ⚠️ Tesseract must be installed separately for OCR (optional feature)
-
-### Creating a DMG for Distribution
-
-To package the app for easy distribution:
-
-```bash
-# First build the app
-./build_app.sh
-
-# Then create a DMG
-./create_dmg.sh
-
-# The DMG will be created in: dist/ListComparer-v1.0.0.dmg
-```
-
-Users can then:
-1. Download the DMG
-2. Mount it (double-click)
-3. Drag "List Comparer.app" to Applications folder
-4. Done!
+1. Clone or download this repository
+2. Open `index.html` in any modern web browser
+3. That's it - no build process or dependencies needed!
 
 ## Usage
 
-1. **Loading Lists:**
-   - Type or paste items directly into either frame (one item per line)
-   - Click "Load File" to open a file dialog
-   - Supported formats: .txt, .xlsx, .docx, .jpg, .png
+### 1. Loading Your Lists
 
-2. **Handling Ambiguity:**
-   - If a file contains multiple data sources (e.g., multiple Excel sheets or columns), you'll be prompted to choose which one to use
+**Paste Text:**
+- Type or paste items directly into either text area
+- One item per line
+- Empty lines are automatically ignored
 
-3. **Fuzzy Matching:**
-   - Enable "Enable Fuzzy Matching" checkbox
-   - Choose between Soundex (phonetic matching) or Levenshtein (edit distance)
-   - For Levenshtein, set the maximum allowed distance (1-10)
-   - Matched pairs will be displayed with character differences highlighted in yellow
+**Upload Files:**
+- Drag and drop a file onto the drop zone
+- OR click the drop zone to browse and select a file
+- Supported formats: `.txt`, `.xlsx`, `.docx`
 
-4. **Comparing:**
-   - Click "Compare Lists" to see results
-   - Results show:
-     - Total counts
-     - **Fuzzy Matched Pairs** (with highlighted differences in yellow)
-     - Items only in List 1 (red)
-     - Items only in List 2 (blue)
-     - Items in both lists (green, exact matches only)
+### 2. Choose Matching Algorithm
+
+**Exact Match:**
+- Finds only perfect matches
+- Case sensitivity is optional (toggle "Ignore Case")
+- Best for: Comparing identical lists
+
+**Soundex (Phonetic):**
+- Matches items that sound similar
+- Great for finding name variations
+- Example: "Smith" ⟷ "Smyth", "Jon" ⟷ "John"
+- Best for: Names, words with common misspellings
+
+**Levenshtein (Similarity):**
+- Matches items based on edit distance
+- Adjustable similarity threshold (50-100%)
+- Shows similarity percentage for each match
+- Example: "color" ⟷ "colour" (83% similar)
+- Best for: Finding near-matches, typos, variations
+
+### 3. Compare and View Results
+
+Click **"Compare Lists"** to see:
+
+- **Summary Cards:**
+  - Number of matches found
+  - Items only in List 1
+  - Items only in List 2
+  - Total items processed
+
+- **Matches Tab:**
+  - Paired items from both lists
+  - Visual diff highlighting (yellow background)
+  - Similarity percentage (for Levenshtein)
+
+- **Only in List 1/2 Tabs:**
+  - Items unique to each list
+  - Easy to identify what's missing
 
 ## Examples
 
 ### Exact Matching
+
 ```
 List 1: Apple, Banana, Cherry
 List 2: Banana, Cherry, Date
 
 Results:
-- Only in List 1: Apple
-- Only in List 2: Date
-- In both: Banana, Cherry
+✓ Matches: Banana, Cherry
+• Only in List 1: Apple
+• Only in List 2: Date
 ```
 
-### Fuzzy Matching (Soundex)
+### Fuzzy Matching - Soundex
+
 ```
 List 1: Smith, Jon, Robert
 List 2: Smyth, John, Bob
 
-With Soundex enabled:
-Fuzzy Matched Pairs (differences highlighted):
-  Smith ⟷ Smyth    (y highlighted)
-  Jon ⟷ John      (h highlighted)
+Results with Soundex:
+✓ Fuzzy Matches (differences highlighted):
+  Smith ⟷ Smyth
+  Jon ⟷ John
 
-Only in List 1: Robert
-Only in List 2: Bob
+• Only in List 1: Robert
+• Only in List 2: Bob
 ```
 
-### Fuzzy Matching (Levenshtein, distance=2)
+### Fuzzy Matching - Levenshtein (80% threshold)
+
 ```
 List 1: color, favorite, organize
 List 2: colour, favrite, organise
 
-With Levenshtein (distance=2):
-Fuzzy Matched Pairs (differences highlighted):
-  color ⟷ colour        (u highlighted)
-  favorite ⟷ favrite    (o highlighted)
-  organize ⟷ organise   (s highlighted)
-
-Note: Yellow highlighting shows the exact character differences
+Results with Levenshtein:
+✓ Fuzzy Matches (with similarity):
+  color ⟷ colour (83.3%)
+  favorite ⟷ favrite (87.5%)
+  organize ⟷ organise (87.5%)
 ```
 
 ## File Format Support
 
-### Text Files (.txt)
-- One item per line
-- Empty lines are ignored
+| Format | Extension | What Gets Extracted |
+|--------|-----------|-------------------|
+| Text | `.txt` | One item per line |
+| Excel | `.xlsx` | All non-empty cells from all sheets |
+| Word | `.docx` | All paragraphs and text content |
 
-### Excel Files (.xlsx)
-- If multiple sheets or columns contain data, you'll be prompted to choose
-- Extracts all non-empty cells from the selected column
+## Deploying Your Own Instance
 
-### Word Documents (.docx)
-- Extracts from paragraphs or tables
-- If both exist, you'll be prompted to choose
+### GitHub Pages (Free & Easy)
 
-### Images (.jpg, .png)
-- Uses OCR (Tesseract) to extract text
-- One item per line in the extracted text
-- Requires Tesseract to be installed
+1. **Fork or clone this repository**
+2. **Create a new GitHub repository**
+3. **Upload these files:**
+   - `index.html`
+   - `style.css`
+   - `app.js`
+   - `file-parser.js`
+   - `fuzzy-matcher.js`
 
-## Troubleshooting
+4. **Enable GitHub Pages:**
+   - Go to repository Settings → Pages
+   - Source: Deploy from branch `main`
+   - Folder: `/ (root)`
+   - Save
 
-### OCR not working
-- Ensure Tesseract is installed: `brew install tesseract`
-- Check Tesseract is in PATH: `which tesseract`
+5. **Access your app** at: `https://[username].github.io/[repo-name]/`
 
-### Dependencies not found
-- Run: `pip install -r requirements.txt`
+See `GITHUB_PAGES.md` for detailed deployment instructions.
 
-### App won't build
-- Ensure py2app is installed: `pip install py2app`
-- Clean old builds: `rm -rf build dist`
-- Try again: `./build_app.sh`
+## Technical Details
+
+### Technologies
+
+- **Pure HTML/CSS/JavaScript** - No frameworks or build tools
+- **SheetJS (xlsx.js)** - Excel file parsing
+- **Mammoth.js** - Word document parsing
+- **Custom Algorithms** - Soundex and Levenshtein implementations
+
+### Browser Compatibility
+
+Works in all modern browsers:
+- ✅ Chrome/Edge (recommended)
+- ✅ Firefox
+- ✅ Safari
+- ✅ Opera
+
+Requires JavaScript to be enabled.
+
+### Performance
+
+- Handles lists with thousands of items
+- Fuzzy matching is optimized for speed
+- Large files (Excel/Word) are processed efficiently
+- All processing is non-blocking (UI stays responsive)
+
+## Privacy & Security
+
+- ✅ **No server uploads** - Everything runs in your browser
+- ✅ **No data collection** - No analytics or tracking
+- ✅ **No external APIs** - All libraries loaded from CDN on first visit
+- ✅ **Offline capable** - Works without internet after first load
+
+Your files and data never leave your computer!
+
+## Contributing
+
+Contributions welcome! Feel free to:
+- Report bugs via GitHub Issues
+- Suggest new features
+- Submit pull requests
+- Share your use cases
 
 ## License
 
-MIT License
+MIT License - Feel free to use for personal or commercial projects.
+
+## Support
+
+For issues or questions:
+- Check the `examples/` folder for sample files
+- Read `GITHUB_PAGES.md` for deployment help
+- Open an issue on GitHub
+
+---
+
+A modern, privacy-focused list comparison tool that runs entirely in your browser.

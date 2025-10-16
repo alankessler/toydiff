@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Comparer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>List Comparer</h1>
+            <p>Compare two lists with intelligent matching and fuzzy search</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: List 1 -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>List 1</h2>
+                    <button class="clear-btn" onclick="clearList(1)">Clear</button>
+                </div>
+                <div class="drop-zone" id="dropzone1">
+                    <p>Drop file here or click to select</p>
+                    <p class="file-info">Supports: .txt, .xlsx, .docx</p>
+                    <input type="file" id="file1" accept=".txt,.xlsx,.docx" style="display:none">
+                </div>
+                <textarea id="list1" placeholder="Or paste/type your list here (one item per line)..."></textarea>
+                <div class="list-stats" id="stats1">Items: 0</div>
+            </div>
+
+            <!-- Middle: Controls -->
+            <div class="controls">
+                <div class="match-options">
+                    <label>
+                        <input type="radio" name="match_type" value="exact" checked>
+                        Exact Match
+                    </label>
+                    <label>
+                        <input type="radio" name="match_type" value="soundex">
+                        Soundex (Phonetic)
+                    </label>
+                    <label>
+                        <input type="radio" name="match_type" value="levenshtein">
+                        Levenshtein (Similar)
+                    </label>
+                </div>
+
+                <div class="threshold-control" id="thresholdControl" style="display:none;">
+                    <label for="threshold">Similarity Threshold: <span id="thresholdValue">80</span>%</label>
+                    <input type="range" id="threshold" min="50" max="100" value="80">
+                </div>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="ignoreCase" checked>
+                    Ignore Case
+                </label>
+
+                <button class="compare-btn" id="compareBtn" onclick="compareLists()">Compare Lists</button>
+
+                <div class="status" id="status"></div>
+            </div>
+
+            <!-- Right Panel: List 2 -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>List 2</h2>
+                    <button class="clear-btn" onclick="clearList(2)">Clear</button>
+                </div>
+                <div class="drop-zone" id="dropzone2">
+                    <p>Drop file here or click to select</p>
+                    <p class="file-info">Supports: .txt, .xlsx, .docx</p>
+                    <input type="file" id="file2" accept=".txt,.xlsx,.docx" style="display:none">
+                </div>
+                <textarea id="list2" placeholder="Or paste/type your list here (one item per line)..."></textarea>
+                <div class="list-stats" id="stats2">Items: 0</div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results" id="results" style="display:none;">
+            <h2>Results</h2>
+            <div class="results-summary" id="resultsSummary"></div>
+
+            <div class="results-tabs">
+                <button class="tab-btn active" onclick="showTab('matches')">Matches</button>
+                <button class="tab-btn" onclick="showTab('list1only')">Only in List 1</button>
+                <button class="tab-btn" onclick="showTab('list2only')">Only in List 2</button>
+            </div>
+
+            <div class="results-content">
+                <div id="matchesTab" class="tab-content active"></div>
+                <div id="list1onlyTab" class="tab-content"></div>
+                <div id="list2onlyTab" class="tab-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <!-- Application Scripts -->
+    <script src="fuzzy-matcher.js"></script>
+    <script src="file-parser.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

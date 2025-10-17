@@ -20,13 +20,26 @@ function initializeApp() {
     setupFileInput('file2', 'dropzone2', 2);
 
     // Set up text area listeners
-    document.getElementById('list1').addEventListener('input', () => {
+    const textarea1 = document.getElementById('list1');
+    const textarea2 = document.getElementById('list2');
+
+    textarea1.addEventListener('input', () => {
         updateStats(1);
         debouncedUpdateLiveScores();
     });
-    document.getElementById('list2').addEventListener('input', () => {
+
+    textarea2.addEventListener('input', () => {
         updateStats(2);
         debouncedUpdateLiveScores();
+    });
+
+    // Sync scrolling between textarea and highlight div
+    textarea1.addEventListener('scroll', () => {
+        document.getElementById('highlight1').scrollTop = textarea1.scrollTop;
+    });
+
+    textarea2.addEventListener('scroll', () => {
+        document.getElementById('highlight2').scrollTop = textarea2.scrollTop;
     });
 
     // Set up threshold slider
@@ -434,6 +447,86 @@ function debounce(func, wait) {
 const debouncedUpdateLiveScores = debounce(updateLiveScores, 500);
 
 /**
+ * Update textarea highlighting based on current matches
+ */
+function updateTextareaHighlighting() {
+    const list1Text = document.getElementById('list1').value;
+    const list2Text = document.getElementById('list2').value;
+
+    const list1Lines = list1Text.split('\n');
+    const list2Lines = list2Text.split('\n');
+
+    // If no results yet, just display plain text
+    if (!state.results) {
+        document.getElementById('highlight1').innerHTML = escapeHtml(list1Text);
+        document.getElementById('highlight2').innerHTML = escapeHtml(list2Text);
+        return;
+    }
+
+    // Create maps of matched indices
+    const matched1 = new Map(); // index -> match object
+    const matched2 = new Map();
+
+    for (const match of state.results.matches) {
+        if (match.diff) {
+            // Find the line index for this match
+            const idx1 = state.list1.indexOf(match.item1);
+            const idx2 = state.list2.indexOf(match.item2);
+
+            if (idx1 !== -1) matched1.set(idx1, match);
+            if (idx2 !== -1) matched2.set(idx2, match);
+        }
+    }
+
+    // Build highlighted HTML for list 1
+    let html1 = '';
+    let lineIndex1 = 0;
+    for (let i = 0; i < list1Lines.length; i++) {
+        const line = list1Lines[i];
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.length > 0) {
+            const match = matched1.get(lineIndex1);
+            if (match && match.diff) {
+                html1 += match.diff.str1;
+            } else {
+                html1 += escapeHtml(line);
+            }
+            lineIndex1++;
+        } else {
+            html1 += escapeHtml(line);
+        }
+
+        if (i < list1Lines.length - 1) html1 += '\n';
+    }
+
+    // Build highlighted HTML for list 2
+    let html2 = '';
+    let lineIndex2 = 0;
+    for (let i = 0; i < list2Lines.length; i++) {
+        const line = list2Lines[i];
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.length > 0) {
+            const match = matched2.get(lineIndex2);
+            if (match && match.diff) {
+                html2 += match.diff.str2;
+            } else {
+                html2 += escapeHtml(line);
+            }
+            lineIndex2++;
+        } else {
+            html2 += escapeHtml(line);
+        }
+
+        if (i < list2Lines.length - 1) html2 += '\n';
+    }
+
+    document.getElementById('highlight1').innerHTML = html1;
+    document.getElementById('highlight2').innerHTML = html2;
+}
+
+/**
  * Update live algorithm scores and perform automatic comparison
  */
 function updateLiveScores() {
@@ -540,6 +633,9 @@ function updateLiveScores() {
 
         // Display results automatically
         displayResults();
+
+        // Update textarea highlighting
+        updateTextareaHighlighting();
 
         // Update UI to show selected algorithm
         document.querySelectorAll('.score-item').forEach(item => {

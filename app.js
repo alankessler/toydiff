@@ -71,6 +71,12 @@ function initializeApp() {
     // Initialize stats
     updateStats(1);
     updateStats(2);
+
+    // Set exact match as selected by default
+    const exactScoreItem = document.querySelector('.score-item[data-algorithm="exact"]');
+    if (exactScoreItem) {
+        exactScoreItem.classList.add('selected');
+    }
 }
 
 /**

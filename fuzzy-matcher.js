@@ -380,12 +380,14 @@ class FuzzyMatcher {
                     if (unmatched2.has(j)) {
                         const item2 = normalize(list2[j]);
                         if (item1 === item2) {
+                            const diff = this.highlightDiff(list1[i], list2[j]);
                             matches.push({
                                 item1: list1[i],
                                 item2: list2[j],
                                 index1: i,
                                 index2: j,
-                                matchType: 'exact'
+                                matchType: 'exact',
+                                diff: diff
                             });
                             unmatched1.delete(i);
                             unmatched2.delete(j);

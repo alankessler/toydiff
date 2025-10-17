@@ -129,6 +129,7 @@ async function handleFile(file, listNum) {
         const items = await FileParser.parse(file);
         textarea.value = items.join('\n');
         updateStats(listNum);
+        debouncedUpdateLiveScores(); // Trigger comparison after file load
         showStatus(`Loaded ${items.length} items from ${file.name}`, 'success');
 
         // Auto-hide success message after 3 seconds

@@ -165,6 +165,9 @@ function onMatchTypeChange(e) {
     } else {
         thresholdControl.style.display = 'none';
     }
+
+    // Automatically re-compare with new algorithm
+    debouncedUpdateLiveScores();
 }
 
 /**
@@ -291,9 +294,6 @@ function displayResults() {
     displayMatches();
     displayList1Only();
     displayList2Only();
-
-    // Scroll to results
-    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
@@ -435,27 +435,29 @@ function debounce(func, wait) {
 const debouncedUpdateLiveScores = debounce(updateLiveScores, 500);
 
 /**
- * Update live algorithm scores in real-time
+ * Update live algorithm scores and perform automatic comparison
  */
 function updateLiveScores() {
     const list1Text = document.getElementById('list1').value;
     const list2Text = document.getElementById('list2').value;
 
-    const list1 = list1Text
+    state.list1 = list1Text
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
-    const list2 = list2Text
+    state.list2 = list2Text
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
     const liveScoresDiv = document.getElementById('liveScores');
+    const resultsDiv = document.getElementById('results');
 
     // Hide if either list is empty
-    if (list1.length === 0 || list2.length === 0) {
+    if (state.list1.length === 0 || state.list2.length === 0) {
         liveScoresDiv.style.display = 'none';
+        resultsDiv.style.display = 'none';
         return;
     }
 
@@ -481,13 +483,13 @@ function updateLiveScores() {
     // Calculate scores for each algorithm
     for (const algo of algorithms) {
         try {
-            const result = FuzzyMatcher.matchLists(list1, list2, {
+            const result = FuzzyMatcher.matchLists(state.list1, state.list2, {
                 matchType: algo.name,
                 ignoreCase,
                 threshold
             });
 
-            const totalItems = Math.max(list1.length, list2.length);
+            const totalItems = Math.max(state.list1.length, state.list2.length);
             const matchCount = result.matches.length;
             const percentage = totalItems > 0 ? (matchCount / totalItems) * 100 : 0;
 
@@ -508,7 +510,7 @@ function updateLiveScores() {
         }
     }
 
-    // Update UI
+    // Update score UI
     for (const score of scores) {
         const scoreItem = document.querySelector(`.score-item[data-algorithm="${score.algorithm}"]`);
         if (scoreItem) {
@@ -525,5 +527,21 @@ function updateLiveScores() {
                 scoreItem.classList.remove('best');
             }
         }
+    }
+
+    // Automatically run comparison with selected algorithm
+    const matchType = document.querySelector('input[name="match_type"]:checked').value;
+
+    try {
+        state.results = FuzzyMatcher.matchLists(state.list1, state.list2, {
+            matchType,
+            ignoreCase,
+            threshold
+        });
+
+        // Display results automatically
+        displayResults();
+    } catch (error) {
+        console.error('Comparison error:', error);
     }
 }

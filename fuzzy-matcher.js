@@ -97,44 +97,56 @@ class FuzzyMatcher {
         const len1 = str1.length;
         const len2 = str2.length;
 
-        const H = {};
-        const maxdist = len1 + len2;
-        H[-1] = maxdist;
+        // Handle edge cases
+        if (len1 === 0) return len2;
+        if (len2 === 0) return len1;
 
-        const da = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+        // Create distance matrix with extra row/column for transpositions
+        const maxDist = len1 + len2;
+        const H = new Map();
+        const da = [];
 
-        for (let i = 0; i <= len1; i++) {
-            H[str1[i - 1]] = 0;
-            da[i][-1] = maxdist;
-            da[i][0] = i;
+        // Initialize matrix
+        for (let i = 0; i <= len1 + 1; i++) {
+            da[i] = [];
+            da[i][0] = maxDist;
         }
-        for (let j = 0; j <= len2; j++) {
-            H[str2[j - 1]] = 0;
-            da[0][j] = j;
+        for (let j = 0; j <= len2 + 1; j++) {
+            da[0][j] = maxDist;
+        }
+        da[0][0] = maxDist;
+
+        for (let i = 1; i <= len1 + 1; i++) {
+            da[i][1] = i - 1;
+        }
+        for (let j = 1; j <= len2 + 1; j++) {
+            da[1][j] = j - 1;
         }
 
-        for (let i = 1; i <= len1; i++) {
-            let DB = 0;
-            for (let j = 1; j <= len2; j++) {
-                const k = H[str2[j - 1]];
+        for (let i = 2; i <= len1 + 1; i++) {
+            let DB = 1;
+            for (let j = 2; j <= len2 + 1; j++) {
+                const k = H.get(str2[j - 2]) || 1;
                 const l = DB;
+
                 let cost = 1;
-                if (str1[i - 1] === str2[j - 1]) {
+                if (str1[i - 2] === str2[j - 2]) {
                     cost = 0;
                     DB = j;
                 }
 
                 da[i][j] = Math.min(
-                    da[i - 1][j] + 1,           // deletion
-                    da[i][j - 1] + 1,           // insertion
-                    da[i - 1][j - 1] + cost,    // substitution
-                    da[k - 1][l - 1] + (i - k - 1) + 1 + (j - l - 1)  // transposition
+                    da[i - 1][j] + 1,                                           // deletion
+                    da[i][j - 1] + 1,                                           // insertion
+                    da[i - 1][j - 1] + cost,                                    // substitution
+                    da[k - 1][l - 1] + (i - k - 2) + 1 + (j - l - 2)          // transposition
                 );
             }
-            H[str1[i - 1]] = i;
+
+            H.set(str1[i - 2], i);
         }
 
-        return da[len1][len2];
+        return da[len1 + 1][len2 + 1];
     }
 
     /**

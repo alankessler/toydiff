@@ -143,30 +143,6 @@ textarea:focus {
     min-width: 250px;
 }
 
-.match-options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.match-options label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 6px;
-    transition: background 0.3s;
-}
-
-.match-options label:hover {
-    background: #e9ecef;
-}
-
-.match-options input[type="radio"] {
-    cursor: pointer;
-}
-
 .threshold-control {
     display: flex;
     flex-direction: column;
@@ -224,13 +200,34 @@ textarea:focus {
     border-color: #e0e7ff;
 }
 
+.score-item.selected {
+    background: #e8f0ff;
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
 .score-item.best {
     background: #e8f5e9;
     border-color: #4caf50;
 }
 
+.score-item.selected.best {
+    background: #e1f4e3;
+    border-color: #4caf50;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
 .score-item.best .score-label::after {
     content: " ⭐";
+}
+
+.score-item.selected .score-label {
+    font-weight: 600;
+    color: #667eea;
+}
+
+.score-item.selected.best .score-label {
+    color: #2e7d32;
 }
 
 .score-label {

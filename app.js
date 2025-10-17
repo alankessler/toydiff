@@ -29,11 +29,6 @@ function initializeApp() {
         debouncedUpdateLiveScores();
     });
 
-    // Set up match type radio buttons
-    document.querySelectorAll('input[name="match_type"]').forEach(radio => {
-        radio.addEventListener('change', onMatchTypeChange);
-    });
-
     // Set up threshold slider
     const thresholdSlider = document.getElementById('threshold');
     thresholdSlider.addEventListener('input', (e) => {
@@ -50,11 +45,26 @@ function initializeApp() {
     document.querySelectorAll('.score-item').forEach(item => {
         item.addEventListener('click', () => {
             const algorithm = item.dataset.algorithm;
-            const radio = document.querySelector(`input[name="match_type"][value="${algorithm}"]`);
-            if (radio) {
-                radio.checked = true;
-                onMatchTypeChange({ target: radio });
+
+            // Update selected algorithm
+            document.getElementById('selectedAlgorithm').value = algorithm;
+
+            // Update UI to show selection
+            document.querySelectorAll('.score-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+
+            // Show/hide threshold control based on algorithm
+            const thresholdControl = document.getElementById('thresholdControl');
+            const fuzzyAlgorithms = ['levenshtein', 'damerau-levenshtein', 'jaro-winkler', 'token-sort'];
+
+            if (fuzzyAlgorithms.includes(algorithm)) {
+                thresholdControl.style.display = 'flex';
+            } else {
+                thresholdControl.style.display = 'none';
             }
+
+            // Re-run comparison with new algorithm
+            debouncedUpdateLiveScores();
         });
     });
 
@@ -151,24 +161,6 @@ function updateStats(listNum) {
     stats.textContent = `Items: ${lines.length}`;
 }
 
-/**
- * Handle match type change
- */
-function onMatchTypeChange(e) {
-    const thresholdControl = document.getElementById('thresholdControl');
-
-    // Show threshold control for fuzzy matching algorithms
-    const fuzzyAlgorithms = ['levenshtein', 'damerau-levenshtein', 'jaro-winkler', 'token-sort'];
-
-    if (fuzzyAlgorithms.includes(e.target.value)) {
-        thresholdControl.style.display = 'flex';
-    } else {
-        thresholdControl.style.display = 'none';
-    }
-
-    // Automatically re-compare with new algorithm
-    debouncedUpdateLiveScores();
-}
 
 /**
  * Clear list
@@ -530,7 +522,7 @@ function updateLiveScores() {
     }
 
     // Automatically run comparison with selected algorithm
-    const matchType = document.querySelector('input[name="match_type"]:checked').value;
+    const matchType = document.getElementById('selectedAlgorithm').value;
 
     try {
         state.results = FuzzyMatcher.matchLists(state.list1, state.list2, {
@@ -541,6 +533,15 @@ function updateLiveScores() {
 
         // Display results automatically
         displayResults();
+
+        // Update UI to show selected algorithm
+        document.querySelectorAll('.score-item').forEach(item => {
+            if (item.dataset.algorithm === matchType) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        });
     } catch (error) {
         console.error('Comparison error:', error);
     }

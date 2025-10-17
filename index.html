@@ -31,43 +31,6 @@
 
             <!-- Middle: Controls -->
             <div class="controls">
-                <div class="match-options">
-                    <label title="Find only perfect matches between lists. Case sensitivity is optional.">
-                        <input type="radio" name="match_type" value="exact" checked>
-                        Exact Match
-                    </label>
-                    <label title="Phonetic matching algorithm. Matches words that sound similar.&#10;Example: 'Smith' matches 'Smyth'&#10;&#10;Learn more: https://en.wikipedia.org/wiki/Soundex">
-                        <input type="radio" name="match_type" value="soundex">
-                        Soundex 🔊
-                    </label>
-                    <label title="Edit distance algorithm. Counts insertions, deletions, and substitutions.&#10;Example: 'color' matches 'colour' (1 edit)&#10;&#10;Learn more: https://en.wikipedia.org/wiki/Levenshtein_distance">
-                        <input type="radio" name="match_type" value="levenshtein">
-                        Levenshtein ✏️
-                    </label>
-                    <label title="Enhanced edit distance with transpositions (character swaps).&#10;Better for common typos like 'recieve' vs 'receive'.&#10;Example: Treats 'teh' vs 'the' as 1 edit instead of 2.&#10;&#10;Learn more: https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance">
-                        <input type="radio" name="match_type" value="damerau-levenshtein">
-                        Damerau-Levenshtein 🔄
-                    </label>
-                    <label title="String similarity with prefix bonus. Excellent for names.&#10;Gives higher scores when strings match from the beginning.&#10;Example: 'MARTHA' vs 'MARHTA' scores higher than basic similarity.&#10;&#10;Learn more: https://en.wikipedia.org/wiki/Jaro–Winkler_distance">
-                        <input type="radio" name="match_type" value="jaro-winkler">
-                        Jaro-Winkler 👥
-                    </label>
-                    <label title="Handles different word orders by sorting words alphabetically first.&#10;Perfect for names and addresses in different formats.&#10;Example: 'John Smith' matches 'Smith, John' (100%)&#10;&#10;Learn more: https://en.wikipedia.org/wiki/Approximate_string_matching">
-                        <input type="radio" name="match_type" value="token-sort">
-                        Token Sort 🔤
-                    </label>
-                </div>
-
-                <div class="threshold-control" id="thresholdControl" style="display:none;">
-                    <label for="threshold">Similarity Threshold: <span id="thresholdValue">80</span>%</label>
-                    <input type="range" id="threshold" min="50" max="100" value="80">
-                </div>
-
-                <label class="checkbox-label">
-                    <input type="checkbox" id="ignoreCase" checked>
-                    Ignore Case
-                </label>
-
                 <!-- Live Algorithm Scores -->
                 <div class="live-scores" id="liveScores" style="display:none;">
                     <h3>Live Match Scores</h3>
@@ -116,6 +79,19 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="threshold-control" id="thresholdControl" style="display:none;">
+                    <label for="threshold">Similarity Threshold: <span id="thresholdValue">80</span>%</label>
+                    <input type="range" id="threshold" min="50" max="100" value="80">
+                </div>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="ignoreCase" checked>
+                    Ignore Case
+                </label>
+
+                <!-- Hidden input to track selected algorithm -->
+                <input type="hidden" id="selectedAlgorithm" value="exact">
             </div>
 
             <!-- Right Panel: List 2 -->

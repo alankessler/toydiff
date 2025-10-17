@@ -20,8 +20,14 @@ function initializeApp() {
     setupFileInput('file2', 'dropzone2', 2);
 
     // Set up text area listeners
-    document.getElementById('list1').addEventListener('input', () => updateStats(1));
-    document.getElementById('list2').addEventListener('input', () => updateStats(2));
+    document.getElementById('list1').addEventListener('input', () => {
+        updateStats(1);
+        debouncedUpdateLiveScores();
+    });
+    document.getElementById('list2').addEventListener('input', () => {
+        updateStats(2);
+        debouncedUpdateLiveScores();
+    });
 
     // Set up match type radio buttons
     document.querySelectorAll('input[name="match_type"]').forEach(radio => {
@@ -32,6 +38,24 @@ function initializeApp() {
     const thresholdSlider = document.getElementById('threshold');
     thresholdSlider.addEventListener('input', (e) => {
         document.getElementById('thresholdValue').textContent = e.target.value;
+        debouncedUpdateLiveScores();
+    });
+
+    // Set up ignore case checkbox
+    document.getElementById('ignoreCase').addEventListener('change', () => {
+        debouncedUpdateLiveScores();
+    });
+
+    // Set up clickable score items
+    document.querySelectorAll('.score-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const algorithm = item.dataset.algorithm;
+            const radio = document.querySelector(`input[name="match_type"][value="${algorithm}"]`);
+            if (radio) {
+                radio.checked = true;
+                onMatchTypeChange({ target: radio });
+            }
+        });
     });
 
     // Initialize stats
@@ -388,4 +412,118 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+/**
+ * Debounce function to limit execution rate
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+/**
+ * Debounced version of updateLiveScores
+ */
+const debouncedUpdateLiveScores = debounce(updateLiveScores, 500);
+
+/**
+ * Update live algorithm scores in real-time
+ */
+function updateLiveScores() {
+    const list1Text = document.getElementById('list1').value;
+    const list2Text = document.getElementById('list2').value;
+
+    const list1 = list1Text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+    const list2 = list2Text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+    const liveScoresDiv = document.getElementById('liveScores');
+
+    // Hide if either list is empty
+    if (list1.length === 0 || list2.length === 0) {
+        liveScoresDiv.style.display = 'none';
+        return;
+    }
+
+    // Show the live scores panel
+    liveScoresDiv.style.display = 'block';
+
+    const ignoreCase = document.getElementById('ignoreCase').checked;
+    const threshold = parseInt(document.getElementById('threshold').value);
+
+    const algorithms = [
+        { name: 'exact', label: 'Exact Match' },
+        { name: 'soundex', label: 'Soundex 🔊' },
+        { name: 'levenshtein', label: 'Levenshtein ✏️' },
+        { name: 'damerau-levenshtein', label: 'Damerau-Levenshtein 🔄' },
+        { name: 'jaro-winkler', label: 'Jaro-Winkler 👥' },
+        { name: 'token-sort', label: 'Token Sort 🔤' }
+    ];
+
+    const scores = [];
+    let bestScore = 0;
+    let bestAlgorithm = null;
+
+    // Calculate scores for each algorithm
+    for (const algo of algorithms) {
+        try {
+            const result = FuzzyMatcher.matchLists(list1, list2, {
+                matchType: algo.name,
+                ignoreCase,
+                threshold
+            });
+
+            const totalItems = Math.max(list1.length, list2.length);
+            const matchCount = result.matches.length;
+            const percentage = totalItems > 0 ? (matchCount / totalItems) * 100 : 0;
+
+            scores.push({
+                algorithm: algo.name,
+                label: algo.label,
+                percentage: percentage,
+                matchCount: matchCount,
+                totalItems: totalItems
+            });
+
+            if (percentage > bestScore) {
+                bestScore = percentage;
+                bestAlgorithm = algo.name;
+            }
+        } catch (error) {
+            console.error(`Error calculating score for ${algo.name}:`, error);
+        }
+    }
+
+    // Update UI
+    for (const score of scores) {
+        const scoreItem = document.querySelector(`.score-item[data-algorithm="${score.algorithm}"]`);
+        if (scoreItem) {
+            const fillBar = scoreItem.querySelector('.score-fill');
+            const valueText = scoreItem.querySelector('.score-value');
+
+            fillBar.style.width = `${score.percentage}%`;
+            valueText.textContent = `${score.percentage.toFixed(0)}% (${score.matchCount}/${score.totalItems})`;
+
+            // Mark best algorithm
+            if (score.algorithm === bestAlgorithm && bestScore > 0) {
+                scoreItem.classList.add('best');
+            } else {
+                scoreItem.classList.remove('best');
+            }
+        }
+    }
 }

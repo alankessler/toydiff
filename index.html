@@ -68,6 +68,55 @@
                     Ignore Case
                 </label>
 
+                <!-- Live Algorithm Scores -->
+                <div class="live-scores" id="liveScores" style="display:none;">
+                    <h3>Live Match Scores</h3>
+                    <div class="score-list" id="scoreList">
+                        <div class="score-item" data-algorithm="exact">
+                            <div class="score-label">Exact Match</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="score-value">0% (0/0)</div>
+                        </div>
+                        <div class="score-item" data-algorithm="soundex">
+                            <div class="score-label">Soundex 🔊</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="score-value">0% (0/0)</div>
+                        </div>
+                        <div class="score-item" data-algorithm="levenshtein">
+                            <div class="score-label">Levenshtein ✏️</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="score-value">0% (0/0)</div>
+                        </div>
+                        <div class="score-item" data-algorithm="damerau-levenshtein">
+                            <div class="score-label">Damerau-Levenshtein 🔄</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="score-value">0% (0/0)</div>
+                        </div>
+                        <div class="score-item" data-algorithm="jaro-winkler">
+                            <div class="score-label">Jaro-Winkler 👥</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="score-value">0% (0/0)</div>
+                        </div>
+                        <div class="score-item" data-algorithm="token-sort">
+                            <div class="score-label">Token Sort 🔤</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="score-value">0% (0/0)</div>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="compare-btn" id="compareBtn" onclick="compareLists()">Compare Lists</button>
 
                 <div class="status" id="status"></div>
